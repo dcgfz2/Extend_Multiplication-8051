@@ -1,6 +1,5 @@
-;add-shift mutiplaction
 ;BANK0 R0:LOWER BYTE OF MUTIPLICAND  R1:UPPER BYTE OF MUTIPLICAND R2:LOWER BYTE OF MUTIPLIER R3:UPPER BYTE OF MUTIPLIER R7:LENGTH *DON'T CHANGE*
-;BANK1 R0:ADD-SHIFT PRODUCT(LOWER)	R1:ADD-SHIFT PRODUCT(UPPER)	R3: NUMBER OF ADDITIONS
+;BANK1 R0:ADD-SHIFT PRODUCT(LOWER)	R1:ADD-SHIFT PRODUCT(MIDDLE) R2::ADD-SHIFT PRODUCT(UPPER)	R3: NUMBER OF ADDITIONS
 ;USE BANK2/3 FOR BOOTHS
 		org 0000h
 		;input1
@@ -41,13 +40,13 @@
 		mov a, r0 ;copy mutiplicand to bank1
 		clr PSW.4
 		setb PSW.3
-		mov r6, a
+		mov r5, a
 		clr PSW.4
 		clr PSW.3
 		mov a, r1 
 		clr PSW.4
 		setb PSW.3
-		mov r7, a
+		mov r6, a
 		clr PSW.4
 		clr PSW.3 
 		
@@ -57,16 +56,22 @@ addshift:	clr c
 			clr PSW.4	;swap to bank1
 			setb PSW.3
 			inc r3	;increment number of additions
-			mov a, r6
+			mov a, r5
 			add a, r0
 			mov r0, a
-			mov a, r7
+			mov a, r6
 			addc a,r1
 			mov r1, a
+			mov a, r7
+			addc a,r2
+			mov r2,a
 SHIFT:		clr c
 			clr PSW.4 ;swap to bank1
 			setb PSW.3
-			mov a, r6 ;shift mutiplicand to the left
+			mov a, r5 ;shift mutiplicand to the left
+			RLC a
+			mov r5, a
+			mov a, r6
 			RLC a
 			mov r6, a
 			mov a, r7
@@ -75,16 +80,16 @@ SHIFT:		clr c
 			clr PSW.4 ;swap to bank0
 			clr PSW.3
 			clr c
-			mov a, r4 ;shift mutiplier to the right
-			RRC a
-			mov r4, a
-			mov a, r5
+			mov a, r5 ;shift mutiplier to the right
 			RRC a
 			mov r5, a
+			mov a, r4
+			RRC a
+			mov r4, a
 			DJNZ r6, addshift
 			
 			;add-shift ends here
-			clr PSW.4 ;swap to bank1
+			clr PSW.4 ;swap to bank1/ This is just to check final product
 			setb PSW.3
 			
 			;rest goes here
