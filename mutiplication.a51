@@ -100,9 +100,111 @@ SHIFT:		clr c
 			mov r5, TH0
 			
 			;add-shift ends here
-			clr PSW.4 ;swap to bank1/ This is just to check final product
-			setb PSW.3
+			;set-up for booths
+			mov TL0, #00H ;clear timer0
+			mov TH0, #00H
+			clr PSW.4 ;swap to bank0
+			clr PSW.3
+			mov a, r7
+			mov r6, a ;reset counter
+			mov a, r2
+			mov r4, a  
+			mov a, r3
+			mov r5,	a ;reset mutiplier
 			
-			;rest goes here
+			mov a, r4
+			setb PSW.4 ;swap to bank2
+			clr PSW.3
+			mov r0,a
+			clr PSW.4 ;swap to bank0
+			clr PSW.3
+			mov a,r5
+			setb PSW.4 ;swap to bank2
+			clr PSW.3
+			mov r1,a ;move mutiplier into product registers
+			clr c
+			mov a, r0
+			RLC a
+			mov r0,a
+			mov a,r1
+			RLC a
+			mov r1,a ;shift mutiplier to the left 1 bit
+			
+			clr PSW.4 ;swap to bank0
+			clr PSW.3
+			mov a, r0
+			setb PSW.4 ;swap to bank2
+			clr PSW.3
+			mov r6, a
+			clr PSW.4 ;swap to bank0
+			clr PSW.3
+			mov a, r1
+			setb PSW.4 ;swap to bank2
+			clr PSW.3
+			mov r7, a
+			; booths starts here
+			setb TR0 ;start timer0
+			
+booths:		setb PSW.4 ;swap to bank2
+			clr PSW.3
+			clr c
+			mov b,r0
+			JNB b.0, zero
+			JB b.1, shiftb ;shift if 11
+			inc r3 			;since 01 add shift
+			mov a,r1
+			add a, r6
+			mov r2, a
+			mov a, r2
+			addc a, r7
+			mov r2, a
+			ljmp shiftb
+zero:		JNB b.1, shiftb ;shift if 00
+			inc r4			;since 10 sub shift
+			mov a,r1
+			subb a, r6
+			mov r2, a
+			mov a, r2
+			subb a, r7
+			mov r2, a
+shiftb:		clr c
+			mov a, r2
+			RR a
+			mov r2,a
+			mov a, r1
+			RRC a
+			mov r1, a
+			mov a, r0
+			RRC a
+			mov r0, a
+			clr PSW.4 ;swap to bank0
+			clr PSW.3
+			DJNZ r6, booths
+			
+			CLR TR0 ;stop timer
+			setb PSW.4 ;swap to bank2
+			clr PSW.3
+			mov r5, TL0 ;load timer values into register
+			mov r6, TH0
+			clr PSW.4
+			setb PSW.3
+			mov a,r0
+			setb PSW.4
+			clr PSW.3
+			mov r0,a
+			clr PSW.4
+			setb PSW.3
+			mov a,r1
+			setb PSW.4
+			clr PSW.3
+			mov r1,a
+			clr PSW.4
+			setb PSW.3
+			mov a,r2
+			setb PSW.4
+			clr PSW.3
+			mov r2,a
+			mov r7, #00H
+		
 STALL: 		SJMP STALL
 		end
